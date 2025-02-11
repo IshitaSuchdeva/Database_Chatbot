@@ -1,8 +1,10 @@
 A chatbot to query your MYSQL database powered by llama3
 Interface:
-![image.png](attachment:622ca255-6f0a-4e48-be0d-c58cbf884dc6:image.png)
+![image](https://github.com/user-attachments/assets/1fc76750-4415-4746-8324-dd980b83b0f3)
+
 Database schema:
-![image.png](attachment:ff0d6164-388b-4260-8095-92b8f54b3716:image.png)
+![image](https://github.com/user-attachments/assets/5b0476e8-4fc0-4339-9916-ba3fec44445e)
+
 
 
 
