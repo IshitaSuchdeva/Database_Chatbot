@@ -1,7 +1,1 @@
-Based on the result, it appears that the total sales amount per product category are:
-
-* For Beauty products, the total sales amount is $1,455.
-* For Clothing products, the total sales amount is $5,040.
-* For Electronics products, the total sales amount is $5,310.
-
-These figures represent the cumulative total sales for each product category in your database.
+The youngest employee is Bob Smith, who is 28 years old and works in the Engineering department. He started working on July 15, 2021.

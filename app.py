@@ -46,8 +46,20 @@ def connectDatabase(db_type, username, port, host, password, database):
     st.sidebar.success("Database connected!")
 
 # Function to run a SQL query
+# def runQuery(query):
+#     return st.session_state.db.run(query) if st.session_state.db else "Please connect to the database first."
 def runQuery(query):
-    return st.session_state.db.run(query) if st.session_state.db else "Please connect to the database first."
+    if "db" not in st.session_state or not st.session_state.db:
+        return "❌ Error: Database not connected!"
+    
+    try:
+        print("🛠 Running SQL Query:", query)  # Debug
+        return st.session_state.db.run(query)
+    
+    except Exception as e:
+        print("❌ SQL Execution Error:", e)
+        return f"Error executing query: {str(e)}"
+
 
 # Function to retrieve the database schema
 def getDatabaseSchema():
@@ -57,26 +69,26 @@ def getDatabaseSchema():
 llm = ChatOllama(model="llama3")
 
 # Function to generate SQL query from user's natural language question
-def getQueryFromLLM(question):
-    template = """Below is the schema of the connected database. Read the schema carefully, paying attention to the table and column names. Ensure that table or column names are used exactly as they appear in the schema. Answer the user's question in the form of an SQL query.
+# def getQueryFromLLM(question):
+#     template = """Below is the schema of the connected database. Read the schema carefully, paying attention to the table and column names. Ensure that table or column names are used exactly as they appear in the schema. Answer the user's question in the form of an SQL query.
 
-    {schema}
+#     {schema}
 
-    Please provide only the SQL query and nothing else.
+#     Please provide only the SQL query and nothing else.
 
-    question: {question}
-    SQL query:"""
+#     question: {question}
+#     SQL query:"""
     
-    prompt = ChatPromptTemplate.from_template(template)
-    chain = prompt | llm
+#     prompt = ChatPromptTemplate.from_template(template)
+#     chain = prompt | llm
 
-    response = chain.invoke({
-        "question": question,
-        "schema": getDatabaseSchema()
-    })
-    return response.content
+#     response = chain.invoke({
+#         "question": question,
+#         "schema": getDatabaseSchema()
+#     })
+#     return response.content
 
-# Function to generate a response for the query result
+#Function to generate a response for the query result
 def getResponseForQueryResult(question, query, result):
     template = """Below is the schema of the connected database. Based on the schema and the query result, write a natural language response to the user's question.
 
@@ -105,6 +117,37 @@ def getResponseForQueryResult(question, query, result):
     })
 
     return response.content
+def getQueryFromLLM(question):
+    try:
+        print("🔍 Fetching database schema...")  # Debug
+        schema = getDatabaseSchema()
+        print("✅ Schema received:", schema)  # Debug
+        
+        template = """Below is the schema of the connected database...
+        
+        {schema}
+
+        Please provide only the SQL query and nothing else.
+
+        question: {question}
+        SQL query:"""
+        
+        prompt = ChatPromptTemplate.from_template(template)
+        chain = prompt | llm
+
+        print("⏳ Sending request to Ollama...")  # Debug
+        response = chain.invoke({
+            "question": question,
+            "schema": schema
+        })
+        print("✅ Ollama response:", response.content)  # Debug
+        
+        return response.content
+
+    except Exception as e:
+        print("❌ Error in getQueryFromLLM:", e)
+        return "SELECT 1;"  # Return a simple fallback query
+
 
 # Function to save response to a text file
 def save_response_to_file(response_text):
@@ -187,31 +230,56 @@ if "chat" not in st.session_state:
 
 question = st.chat_input("Chat with your database")
 
+# if question:
+#     if "db" not in st.session_state:
+#         st.error('Please connect to the database first.')
+#     else:
+#         st.session_state.chat.append({"role": "user", "content": question})
+
+#         # Generate SQL query from LLM
+#         query = getQueryFromLLM(question)
+
+#         # Execute the query
+#         result = runQuery(query)
+
+#         # Generate a response based on the query result
+#         response = getResponseForQueryResult(question, query, result)
+
+#         # Translate the response if a language other than English is selected
+#         target_language_code = supported_languages.get(selected_language, 'en')
+#         if target_language_code != 'en':
+#             response = translate_text(response, target_language_code)
+        
+#         st.session_state.chat.append({"role": "assistant", "content": response})
+
+#         # Save the response and generate audio
+#         save_response_to_file(response)
+#         text_to_speech(response, lang=target_language_code)
 if question:
     if "db" not in st.session_state:
-        st.error('Please connect to the database first.')
+        st.error('⚠️ Please connect to the database first.')
     else:
         st.session_state.chat.append({"role": "user", "content": question})
-
-        # Generate SQL query from LLM
+        
+        print("🔍 User asked:", question)  # Debugging
         query = getQueryFromLLM(question)
-
-        # Execute the query
+        print("✅ Generated Query:", query)  # Debugging
+        
         result = runQuery(query)
-
-        # Generate a response based on the query result
+        print("✅ Query Result:", result)  # Debugging
+        
         response = getResponseForQueryResult(question, query, result)
-
-        # Translate the response if a language other than English is selected
+        print("✅ Final Chatbot Response:", response)  # Debugging
+        
         target_language_code = supported_languages.get(selected_language, 'en')
         if target_language_code != 'en':
             response = translate_text(response, target_language_code)
         
         st.session_state.chat.append({"role": "assistant", "content": response})
 
-        # Save the response and generate audio
         save_response_to_file(response)
         text_to_speech(response, lang=target_language_code)
+
 
 # Display chat messages
 for chat in st.session_state.chat:
